@@ -1,0 +1,108 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Rubik', sans-serif;
+}
+
+h1 {
+    color: #343a40;
+}
+
+.weather-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.weather-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.weather-temp {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.weather-condition {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+.weather-day {
+    display: flex;
+    align-items: center;
+    background-color: #e9ecef;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.weather-icon {
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.weather-icon img {
+    width: 50px;
+    height: 50px;
+}
+
+.weather-info {
+    flex-grow: 1;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    .weather-title {
+        font-size: 1.25rem;
+    }
+
+    .weather-temp {
+        font-size: 1rem;
+    }
+
+    .weather-condition {
+        font-size: 0.875rem;
+   
+    }
+}
+
+/* Animations */
+.weather-card {
+    transition: transform 0.3s;
+}
+
+.weather-card:hover {
+    transform: scale(1.05);
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Weather Dashboard</h1>
+
+        <div class="row">
+            <!-- Location Form -->
+            <div class="col-md-4 mb-3">
+                <form id="locationForm">
+                    <div class="form-group">
+                        <input type="text" id="locationInput" class="form-control" placeholder="Enter a city name" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+            </div>
+
+            <!-- Subscribe Form -->
+            <div class="col-md-4 mb-3">
+                <form id="subscribeForm">
+                    <div class="form-group">
+                        <input type="email" id="emailInput" class="form-control" placeholder="Enter your email to subscribe" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="locationInputSubscribe" class="form-control" placeholder="Enter your city name for weather updates" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-block">
+                        <i class="fas fa-bell"></i> Subscribe
+                    </button>
+                </form>
+            </div>
+
+            <!-- Unsubscribe Form -->
+            <div class="col-md-4 mb-3">
+                <form id="unsubscribeForm">
+                    <div class="form-group">
+                        <input type="email" id="unsubscribeEmailInput" class="form-control" placeholder="Enter your email to unsubscribe" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-block">
+                        <i class="fas fa-times"></i> Unsubscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Display Location -->
+        <div id="locationDisplay" class="mb-3"></div>
+
+        <div id="weatherResult" class="mt-3"></div>
+
+        <div class="d-flex justify-content-between mt-3">
+            <button id="loadMoreBtn" class="btn btn-info">
+                <i class="fas fa-arrow-down"></i> Load More
+            </button>
+            <button id="viewHistoryBtn" class="btn btn-warning">
+                <i class="fas fa-history"></i> View History
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let searchLocation = '';
+
+        document.getElementById('locationForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            searchLocation = document.getElementById('locationInput').value;
+            currentPage = 1;
+            fetchWeatherData();
+        });
+
+        document.getElementById('subscribeForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const location = document.getElementById('locationInputSubscribe').value;
+            fetch('/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email, location: location })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        document.getElementById('unsubscribeForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const email = document.getElementById('unsubscribeEmailInput').value;
+            fetch('/unsubscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        document.getElementById('loadMoreBtn').addEventListener('click', function () {
+            currentPage++;
+            fetchWeatherData();
+        });
+
+        document.getElementById('viewHistoryBtn').addEventListener('click', function () {
+    fetch('/weather/history', {
+        method: 'GET'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to load weather history.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (Array.isArray(data) && data.length === 0) {
+            document.getElementById('weatherResult').innerHTML = `<p>No weather history available.</p>`;
+        } else if (Array.isArray(data)) {
+            document.getElementById('weatherResult').innerHTML = data.map(entry => `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${entry.location.name}</h5>
+                        <p class="card-text">Temperature: ${entry.current.temp_c}°C</p>
+                        <p class="card-text">Condition: ${entry.current.condition.text}</p>
+                        <p class="card-text">Wind Speed: ${entry.current.wind_kph} km/h</p>
+                        <p class="card-text">Humidity: ${entry.current.humidity}%</p>
+                        ${entry.forecast.forecastday.map(day => `
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <p>Date: ${day.date}</p>
+                                    <p>Temperature: ${day.day.avgtemp_c}°C</p>
+                                    <p>Condition: ${day.day.condition.text}</p>
+                                    <p>Wind Speed: ${day.day.maxwind_kph} km/h</p>
+                                    <p>Humidity: ${day.day.avghumidity}%</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            // Handle case where data is not an array (single object or error)
+            document.getElementById('weatherResult').innerHTML = `<p>Error: Failed to load weather history.</p>`;
+        }
+        // Clear location display when viewing history
+        document.getElementById('locationDisplay').innerHTML = '';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('weatherResult').innerHTML = `<p>Error: ${error.message}</p>`;
+    });
+});
+
+
+
+        function fetchWeatherData() {
+            fetch('/weather', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ location: searchLocation, page: currentPage })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('weatherResult').innerHTML = `<p>${data.error}</p>`;
+                    } else {
+                        if (searchLocation) {
+                            // Display the location searched
+                            document.getElementById('locationDisplay').innerHTML = `<h4>Weather for ${data.location.name}</h4>`;
+                        }
+
+                        if (currentPage === 1) {
+                            // Clear previous weather data if loading first page
+                            document.getElementById('weatherResult').innerHTML = '';
+                        }
+
+                        const forecast = data.forecast.forecastday.map((day, index) => `
+                            <div class="weather-card" style="background-color: ${getCardColor(index)};">
+                                <h5>${day.date}</h5>
+                                <p>Temperature: ${day.day.avgtemp_c}°C</p>
+                                <p>Condition: ${day.day.condition.text}</p>
+                                <p>Wind Speed: ${day.day.maxwind_kph} km/h</p>
+                                <p>Humidity: ${day.day.avghumidity}%</p>
+                            </div>
+                        `).join('');
+
+                        // Append the new forecast data to the existing content
+                        document.getElementById('weatherResult').innerHTML += forecast;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('weatherResult').innerHTML = `<p>Failed to load weather data.</p>`;
+                });
+        }
+
+        function getCardColor(index) {
+            const colors = ['#e0f7fa', '#b9fbc0', '#ffecb3', '#ffab91'];
+            return colors[index % colors.length];
+        }
+    </script>
+
+</body>
+
+</html>
